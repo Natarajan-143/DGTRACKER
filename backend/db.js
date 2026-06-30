@@ -7,6 +7,7 @@ const path = require('path');
 const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/dg_tracker';
 let pool;
 let dbMode = 'pg'; // 'pg' or 'json'
+let lastDbError = null;
 
 const dbFilePath = path.join(__dirname, 'db.json');
 
@@ -154,6 +155,7 @@ async function initDatabase() {
     client.release();
     console.log('PostgreSQL schema initialized successfully.');
   } catch (err) {
+    lastDbError = err.message;
     console.log('\n========================================================================');
     console.log(`WARNING: PostgreSQL connection failed (${err.message}).`);
     console.log('Switching to local JSON file database ("db.json") for instant local demo!');
@@ -548,4 +550,6 @@ module.exports = {
     return pool;
   },
   cascadeRecalculate,
+  getDbMode: () => dbMode,
+  getLastDbError: () => lastDbError,
 };

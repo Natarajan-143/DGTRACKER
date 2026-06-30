@@ -42,7 +42,12 @@ app.use('/api/reports', reportsRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date(),
+    dbMode: db.getDbMode(),
+    dbError: db.getLastDbError()
+  });
 });
 
 // Centralized error handling middleware
