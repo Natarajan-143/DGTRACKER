@@ -37,13 +37,18 @@ async function initDatabase() {
   try {
     const parsed = new URL(dbUrl);
     const targetDb = parsed.pathname.substring(1) || 'dg_tracker';
+    const isLocalhost = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
+    const sslConfig = isLocalhost ? false : { rejectUnauthorized: false };
 
     // 1. Connect to postgres system database to create target DB if not exists
     parsed.pathname = '/postgres';
     const systemDbUrl = parsed.toString();
     
     console.log('Attempting to connect to PostgreSQL...');
-    const systemClient = new Client({ connectionString: systemDbUrl });
+    const systemClient = new Client({ 
+      connectionString: systemDbUrl,
+      ssl: sslConfig
+    });
     await systemClient.connect();
     
     const checkDb = await systemClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [targetDb]);
@@ -55,7 +60,10 @@ async function initDatabase() {
     await systemClient.end().catch(() => {});
 
     // 2. Initialize the Pool for target database
-    pool = new Pool({ connectionString: dbUrl });
+    pool = new Pool({ 
+      connectionString: dbUrl,
+      ssl: sslConfig
+    });
 
     // 3. Create tables if they do not exist
     const client = await pool.connect();
